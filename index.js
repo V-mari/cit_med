@@ -1,24 +1,20 @@
-// Importación de Express
+// Importaciones
 const express = require('express');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const userRoutes = require('./routes/UserRoutes');
+
+// Configuración de variables de entorno
+dotenv.config();
 
 // Creación de una instancia de Express
 const app = express();
-
-// Importación del enrutador de Express
-const router = express.Router();
-
-// Puerto en el que escuchará el servidor
-const port = 3000;
-
-
-const mongoose = require('mongoose');
-
 
 // Estableciendo la URL de conexión a la base de datos.
 // Si existe una variable de entorno DB_URL, la usamos; de lo contrario, utilizamos una cadena de conexión local.
 const DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/mi_base_de_datos';
 
-// Conectando a la base de datos MongoDB utilizando Mongoose.
+// Conexión a la base de datos MongoDB utilizando Mongoose.
 // Usamos useNewUrlParser y useUnifiedTopology para evitar advertencias de deprecación.
 mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => {
@@ -30,6 +26,13 @@ mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
         console.error("Error al conectar a la base de datos:", error);
     });
 
+// Middlewares
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use('/', userRoutes);
+
+// Puerto en el que escuchará el servidor
+const port = process.env.PORT || 3000;
 
 // Inicialización del servidor Express
 app.listen(port, () => {
