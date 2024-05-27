@@ -1,41 +1,36 @@
-// Importaciones
-const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const userRoutes = require('./routes/UserRoutes');
+// importacion de librerias
+const express=require('express');
+const mongoose=require("mongoose");
+require("dotenv").config();
+const auth=require("./middleware/auth");
 
-// Configuración de variables de entorno
-dotenv.config();
+//CONSTANTES
+const app=express();
+//rutas
+const usuarioRutas=require("./routes/usuarioRutas");
+const activoRutas=require("./routes/activoRutas");
+const titularRutas=require("./routes/titularRutas");
+const ubicacionRutas=require("./routes/ubicacionRutas");
+const seguimientoRutas=require("./routes/seguimientoRutas");
 
-// Creación de una instancia de Express
-const app = express();
+//configuracion de entorno (enviroment)
+const PORT=process.env.PORT||3000;
+//conexion mongo
+const MONGO_URI=process.env.MONGO_URI;
 
-// Estableciendo la URL de conexión a la base de datos.
-// Si existe una variable de entorno DB_URL, la usamos; de lo contrario, utilizamos una cadena de conexión local.
-const DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/mi_base_de_datos';
-
-// Conexión a la base de datos MongoDB utilizando Mongoose.
-// Usamos useNewUrlParser y useUnifiedTopology para evitar advertencias de deprecación.
-mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => {
-        // Si la conexión es exitosa, mostramos un mensaje de éxito.
-        console.log("Conexión a la base de datos exitosa");
-    })
-    .catch((error) => {
-        // Si hay un error al conectar, mostramos un mensaje de error con la descripción del error.
-        console.error("Error al conectar a la base de datos:", error);
-    });
-
-// Middlewares
-app.use(express.urlencoded({ extended: true }));
+// configuración convertir el cuerpo del request en json.
 app.use(express.json());
-app.use('/', userRoutes);
 
-// Puerto en el que escuchará el servidor
-const port = process.env.PORT || 3000;
+mongoose.connect(MONGO_URI).then(
+    ()=>{
+        console.log("conexion mongo establecida");
+        app.listen(PORT,()=>{console.log("Servidor express corriendo en el puerto:"+PORT);});
+    }
+).catch(error=>console.log("error de conexion",error));
 
-// Inicialización del servidor Express
-app.listen(port, () => {
-    // Imprime un mensaje en la consola cuando el servidor se inicia correctamente
-    console.log(`Servidor escuchando en el puerto ${port}`);
-});
+
+app.use("/usuario",usuarioRutas)
+app.use("/activos",auth,activoRutas);
+app.use("/titular",auth,titularRutas);
+app.use("/ubicacion",auth,ubicacionRutas);
+app.use("/seguimiento",auth,seguimientoRutas);
